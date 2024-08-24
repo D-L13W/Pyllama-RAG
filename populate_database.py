@@ -4,12 +4,9 @@ import shutil
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.schema.document import Document
-from get_embedding_function import get_embedding_function
-from langchain_community.vectorstores import Chroma
-
-
-CHROMA_PATH = "chroma"
-DATA_PATH = "data"
+from langchain_chroma import Chroma
+from langchain_community.embeddings.ollama import OllamaEmbeddings
+import env_vars
 
 
 def main():
@@ -23,20 +20,20 @@ def main():
         clear_database()
 
     # Create (or update) the data store.
-    documents = load_documents()
+    documents = pdf_load_documents()
     chunks = split_documents(documents)
     add_to_chroma(chunks)
 
 
-def load_documents():
-    document_loader = PyPDFDirectoryLoader(DATA_PATH)
+def pdf_load_documents():
+    document_loader = PyPDFDirectoryLoader(env_vars.PDF_DATA_PATH)
     return document_loader.load()
 
 
 def split_documents(documents: list[Document]):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=800,
-        chunk_overlap=80,
+        chunk_size=env_vars.EMBEDDING_CHUNK_SIZE,
+        chunk_overlap=env_vars.EMBEDDING_CHUNK_OVERLAP,
         length_function=len,
         is_separator_regex=False,
     )
@@ -46,16 +43,17 @@ def split_documents(documents: list[Document]):
 def add_to_chroma(chunks: list[Document]):
     # Load the existing database.
     db = Chroma(
-        persist_directory=CHROMA_PATH, embedding_function=get_embedding_function()
+        persist_directory=env_vars.CHROMA_PATH,
+        embedding_function=env_vars.EMBEDDING_FUNCTION,
     )
 
     # Calculate Page IDs.
     chunks_with_ids = calculate_chunk_ids(chunks)
 
     # Add or Update the documents.
-    existing_items = db.get(include=[])  # IDs are always included by default
-    existing_ids = set(existing_items["ids"])
-    print(f"Number of existing documents in DB: {len(existing_ids)}")
+    existing_chunks = db.get(include=[])  # IDs are always included by default
+    existing_ids = set(existing_chunks["ids"])
+    print(f"Number of existing chunks in DB: {len(existing_ids)}")
 
     # Only add documents that don't exist in the DB.
     new_chunks = []
@@ -64,12 +62,11 @@ def add_to_chroma(chunks: list[Document]):
             new_chunks.append(chunk)
 
     if len(new_chunks):
-        print(f"👉 Adding new documents: {len(new_chunks)}")
+        print(f"👉 Adding new chunks: {len(new_chunks)}")
         new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
         db.add_documents(new_chunks, ids=new_chunk_ids)
-        db.persist()
     else:
-        print("✅ No new documents to add")
+        print("✅ No new chunks to add")
 
 
 def calculate_chunk_ids(chunks):
@@ -102,8 +99,8 @@ def calculate_chunk_ids(chunks):
 
 
 def clear_database():
-    if os.path.exists(CHROMA_PATH):
-        shutil.rmtree(CHROMA_PATH)
+    if os.path.exists(env_vars.CHROMA_PATH):
+        shutil.rmtree(env_vars.CHROMA_PATH)
 
 
 if __name__ == "__main__":
