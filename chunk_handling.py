@@ -6,11 +6,11 @@ import model_vars
 
 
 def recursive_split_documents(documents: list[Document]):
-    CHROMA_CHUNK_SIZE: int = 20000  # in terms of character count
-    CHROMA_CHUNK_OVERLAP: int = 1000
+    CHUNK_SIZE: int = 20000  # in terms of character count
+    CHUNK_OVERLAP: int = 1000
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHROMA_CHUNK_SIZE,
-        chunk_overlap=CHROMA_CHUNK_OVERLAP,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
         length_function=len,
         is_separator_regex=False,
     )

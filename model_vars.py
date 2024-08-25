@@ -5,7 +5,7 @@ from langchain_community.llms.ollama import Ollama
 EMBEDDING_MODEL_FUNCTION = OllamaEmbeddings(
     model="bge-m3"
 )  # Manually specify your model please
-LANG_MODEL_FUNCTION = Ollama(model="llama3.1:latest")
+LANGUAGE_MODEL_FUNCTION = Ollama(model="llama3.1:latest")
 
 # Query variables
 PROMPT_TEMPLATE: str = """
@@ -17,4 +17,5 @@ Answer the question based only on the following context:
 
 Answer the following question based only on the above context: {question}
 """
-SOURCE_NUM: int = 10  # How many chunks to take into account when answering a query
+## How many chunks/sources to take into account when answering a query
+NUM_SOURCES: int = 10
