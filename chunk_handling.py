@@ -27,7 +27,7 @@ def semantic_split_documents(documents: list[Document]):
     return text_splitter.split_documents(documents)
 
 
-def add_to_chroma(chunks: list[Document]):
+def sync_to_db(chunks: list[Document]):
     # Load the existing database.
     db = Chroma(
         persist_directory=storage_handling.CHROMA_PATH,
@@ -35,30 +35,54 @@ def add_to_chroma(chunks: list[Document]):
     )
 
     # Calculate Page IDs.
-    chunks_with_ids = calculate_chunk_ids(chunks)
+    chunks_in_data = calculate_chunk_ids(chunks)
 
-    # Add or Update the documents.
-    existing_chunks = db.get(include=[])  # IDs are always included by default
-    existing_ids = set(existing_chunks["ids"])
-    print(f"Number of existing chunks in DB: {len(existing_ids)}")
+    # Get info on chunks in data path
+    ids_in_data = set([chunk.metadata["id"] for chunk in chunks_in_data])
+    print(f"Number of chunks in data path: {len(ids_in_data)}")
 
-    # Only add documents that don't exist in the DB.
-    new_chunks = []
-    for chunk in chunks_with_ids:
-        if chunk.metadata["id"] not in existing_ids:
-            new_chunks.append(chunk)
+    # Get info on chunks in DB
+    chunks_in_db_dict = db.get(include=[])  # IDs are always included by default
+    ids_in_db = set(
+        chunks_in_db_dict["ids"]
+    )  # key is "ids" not "id" because this is chroma's api
+    print(f"Number of chunks in DB: {len(ids_in_db)}")
 
-    if len(new_chunks):
-        print(f"👉 Adding new chunks: {len(new_chunks)}")
-        new_chunk_ids = [chunk.metadata["id"] for chunk in new_chunks]
-        db.add_documents(new_chunks, ids=new_chunk_ids)
+    # Check chunks that don't exist in the DB but do in data path (need to add to DB)
+    extra_chunks_in_data = []
+    for chunk in chunks_in_data:
+        if chunk.metadata["id"] not in ids_in_db:
+            # need to have a unique hashable id for each document/chunk
+            extra_chunks_in_data.append(chunk)
+
+    # Check chunks that don't exist in data path but do in DB (need to remove from DB)
+    extra_chunk_ids_in_db = []
+    for chunk_id in chunks_in_db_dict["ids"]:
+        if chunk_id not in ids_in_data:
+            extra_chunk_ids_in_db.append(chunk_id)
+
+    # Add extra chunks from data path to DB
+    if len(extra_chunks_in_data):
+        print(f"👉 Adding new chunks: {len(extra_chunks_in_data)}")
+        new_chunk_ids = [chunk.metadata["id"] for chunk in extra_chunks_in_data]
+        db.add_documents(
+            extra_chunks_in_data, ids=new_chunk_ids
+        )  # here is where you assign your own ids to the documents
+        # As you can see Chroma registers the key as "ids", independent of the key you used in chunk.metadata ("id")
     else:
-        print("✅ No new chunks to add")
+        print("✅ No chunks to add to DB")
+
+    # Remove extra chunks in DB
+    if len(extra_chunk_ids_in_db):
+        print(f"👉 Removing extra chunks: {len(extra_chunk_ids_in_db)}")
+        db.delete(ids=extra_chunk_ids_in_db)
+    else:
+        print("✅ No chunks to remove from DB")
 
 
 def calculate_chunk_ids(chunks):
 
-    # This will create IDs like "Page Source | Page Number | Chunk Index"
+    # This will create unique IDs like "<Page Source>:<Page Index>:<Chunk Index>". It creates this id and adds it together with the chunk index to the metadata of each chunk.
 
     last_page_id = None
     current_chunk_index = 0
@@ -66,7 +90,7 @@ def calculate_chunk_ids(chunks):
     for chunk in chunks:
         source = chunk.metadata.get("source")
         page = chunk.metadata.get("page")
-        current_page_id = f"{source} | Page {page + 1}"
+        current_page_id = f"{source}:{page}"
 
         # If the page ID is the same as the last one, increment the index.
         if current_page_id == last_page_id:
@@ -75,10 +99,13 @@ def calculate_chunk_ids(chunks):
             current_chunk_index = 0
 
         # Calculate the chunk ID.
-        chunk_id = f"{current_page_id} | Chunk {current_chunk_index + 1}"
+        chunk_id = f"{current_page_id}:{current_chunk_index}"
         last_page_id = current_page_id
 
-        # Add it to the page meta-data.
+        # Add ID and chunk index to the page meta-data.
         chunk.metadata["id"] = chunk_id
+        chunk.metadata["chunk"] = (
+            current_chunk_index  # chunk index only for a given page of a given source
+        )
 
     return chunks

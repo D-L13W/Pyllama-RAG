@@ -8,18 +8,18 @@ import model_vars
 
 def main():
 
-    # Check if the database should be cleared (using the --clear flag).
+    # Check if the database should be cleared (using the --reset flag).
     parser = argparse.ArgumentParser()
     parser.add_argument("--reset", action="store_true", help="Reset the database.")
     args = parser.parse_args()
     if args.reset:
-        print("✨ Clearing Database")
+        print("🧹 Clearing Database")
         clear_database()
 
     # Create (or update) the data store.
     pdf_documents = storage_handling.pdfload()
     chunks = chunk_handling.semantic_split_documents(pdf_documents)
-    chunk_handling.add_to_chroma(chunks)
+    chunk_handling.sync_to_db(chunks)
 
 
 def clear_database():
