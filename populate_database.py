@@ -18,7 +18,7 @@ def main():
 
     # Create (or update) the data store.
     pdf_documents = storage_handling.pdfload()
-    chunks = chunk_handling.recursive_split_documents(pdf_documents)
+    chunks = chunk_handling.semantic_split_documents(pdf_documents)
     chunk_handling.add_to_chroma(chunks)
 
 

@@ -1,4 +1,5 @@
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_experimental.text_splitter import SemanticChunker
 from langchain.schema.document import Document
 from langchain_chroma import Chroma
 import storage_handling
@@ -13,6 +14,15 @@ def recursive_split_documents(documents: list[Document]):
         chunk_overlap=CHUNK_OVERLAP,
         length_function=len,
         is_separator_regex=False,
+    )
+    return text_splitter.split_documents(documents)
+
+
+def semantic_split_documents(documents: list[Document]):
+    BREAKPOINT_THRESHOLD_AMOUNT: int = 5
+    text_splitter = SemanticChunker(
+        embeddings=model_vars.EMBEDDING_MODEL_FUNCTION,
+        breakpoint_threshold_amount=BREAKPOINT_THRESHOLD_AMOUNT,
     )
     return text_splitter.split_documents(documents)
 
@@ -48,7 +58,7 @@ def add_to_chroma(chunks: list[Document]):
 
 def calculate_chunk_ids(chunks):
 
-    # This will create IDs like "Page Source : Page Number : Chunk Index"
+    # This will create IDs like "Page Source | Page Number | Chunk Index"
 
     last_page_id = None
     current_chunk_index = 0
@@ -56,7 +66,7 @@ def calculate_chunk_ids(chunks):
     for chunk in chunks:
         source = chunk.metadata.get("source")
         page = chunk.metadata.get("page")
-        current_page_id = f"{source}:{page}"
+        current_page_id = f"{source} | Page {page + 1}"
 
         # If the page ID is the same as the last one, increment the index.
         if current_page_id == last_page_id:
@@ -65,7 +75,7 @@ def calculate_chunk_ids(chunks):
             current_chunk_index = 0
 
         # Calculate the chunk ID.
-        chunk_id = f"{current_page_id}:{current_chunk_index}"
+        chunk_id = f"{current_page_id} | Chunk {current_chunk_index + 1}"
         last_page_id = current_page_id
 
         # Add it to the page meta-data.
