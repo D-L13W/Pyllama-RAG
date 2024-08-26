@@ -31,7 +31,7 @@ def query_rag(query_text: str):
 
     sources = [doc.metadata.get("id", None) for doc, _score in results]
     formatted_response = (
-        f"Response:\n{response_text}\nSources:\n{[source + '\n' for source in sources]}"
+        f"Response:\n{response_text}\nSources:\n{'\n'.join(sources)}"
     )
     print(formatted_response)
     return response_text
