@@ -19,7 +19,7 @@ def recursive_split_documents(documents: list[Document]):
 
 
 def semantic_split_documents(documents: list[Document]):
-    BREAKPOINT_THRESHOLD_AMOUNT: int = 10
+    BREAKPOINT_THRESHOLD_AMOUNT: int = 20
     text_splitter = SemanticChunker(
         embeddings=model_vars.EMBEDDING_MODEL_FUNCTION,
         breakpoint_threshold_amount=BREAKPOINT_THRESHOLD_AMOUNT,
