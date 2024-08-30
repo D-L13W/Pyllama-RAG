@@ -2,28 +2,101 @@ import argparse
 from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 import polars as pl
-import storage_handling
-import model_vars
+import model_functions
+
+PROMPT_TEMPLATE: str = """
+Answer the question based only on the following context:
+
+{context}
+
+---
+
+Answer the following question based only on the above context: {question}
+"""
 
 
 def main():
     # Create CLI.
     parser = argparse.ArgumentParser()
-    parser.add_argument("query_text", type=str, help="The query text.")
+    parser.add_argument(
+        "-q",
+        "--query",  # keys are inferred from the CLI flags
+        dest="query_text",
+        type=str,
+        help="Specifies query text.",
+    )
+    parser.add_argument(
+        "--db",
+        "--db-path",
+        dest="db_path",
+        type=str,
+        default="db",
+        help="Specifies database path to read.",
+    )
+    parser.add_argument(
+        "-n",
+        "--num-sources",
+        dest="num_sources",
+        type=int,
+        default=6,
+        help="Specifies how many chunks/sources to take into account when answering a query.",
+    )
+    parser.add_argument(
+        "--ebm",
+        "--embedding-model",
+        dest="embedding_model",
+        type=str,
+        default="bge-m3",
+        help="Specifies embedding model to use (via Ollama).",
+    )
+    parser.add_argument(
+        "--lm",
+        "--language-model",
+        dest="language_model",
+        type=str,
+        default="phi3:14b-medium-4k-instruct-q4_0",
+        help="Specifies language model to use (via Ollama).",
+    )
     args = parser.parse_args()
-    query_text = args.query_text
-    query_rag(query_text)
+
+    # Prints a confirmation of CLI arguments
+    args_dict = vars(args)
+    for key in args_dict:
+        print(f"{key} -> {args_dict[key]}")
+
+    # Get model functions based on provided strings
+    embedding_model_function = model_functions.get_embed_model_func(
+        embedding_model=args.embedding_model
+    )
+    language_model_function = model_functions.get_lang_model_func(
+        language_model=args.language_model
+    )
+
+    # Query the database using CLI arguments
+    query_db(
+        query_text=args.query_text,
+        db_path=args.db_path,
+        num_sources=args.num_sources,
+        embedding_model_function=embedding_model_function,
+        language_model_function=language_model_function,
+    )
 
 
-def query_rag(query_text: str):
+def query_db(
+    query_text: str,
+    db_path: str,
+    num_sources: int,
+    embedding_model_function,
+    language_model_function,
+):
     # Prepare the DB.
     db = Chroma(
-        persist_directory=storage_handling.CHROMA_PATH,
-        embedding_function=model_vars.EMBEDDING_MODEL_FUNCTION,
+        persist_directory=db_path,
+        embedding_function=embedding_model_function,
     )
 
     # Search the DB.
-    results = db.similarity_search_with_score(query_text, k=model_vars.NUM_SOURCES)
+    results = db.similarity_search_with_score(query_text, k=num_sources)
 
     sources = pl.DataFrame(
         {
@@ -37,9 +110,9 @@ def query_rag(query_text: str):
         }
     )  # Results list is small enough that this is fine
     context_text = "\n\n---\n\n".join(sources["content"])
-    prompt_template = ChatPromptTemplate.from_template(model_vars.PROMPT_TEMPLATE)
+    prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
-    response_text = model_vars.LANGUAGE_MODEL_FUNCTION.invoke(prompt)
+    response_text = language_model_function.invoke(prompt)
 
     with pl.Config(
         tbl_hide_column_data_types=True,

@@ -2,8 +2,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain.schema.document import Document
 from langchain_chroma import Chroma
-import storage_handling
-import model_vars
+from unstructured.partition.auto import partition
 
 
 def recursive_split_documents(documents: list[Document]):
@@ -18,20 +17,20 @@ def recursive_split_documents(documents: list[Document]):
     return text_splitter.split_documents(documents)
 
 
-def semantic_split_documents(documents: list[Document]):
+def semantic_split_documents(documents: list[Document], embedding_model_function):
     BREAKPOINT_THRESHOLD_AMOUNT: int = 20
     text_splitter = SemanticChunker(
-        embeddings=model_vars.EMBEDDING_MODEL_FUNCTION,
+        embeddings=embedding_model_function,
         breakpoint_threshold_amount=BREAKPOINT_THRESHOLD_AMOUNT,
     )
     return text_splitter.split_documents(documents)
 
 
-def sync_to_db(chunks: list[Document]):
+def sync_to_db(chunks: list[Document], db_path: str, embedding_model_function):
     # Load the existing database.
     db = Chroma(
-        persist_directory=storage_handling.CHROMA_PATH,
-        embedding_function=model_vars.EMBEDDING_MODEL_FUNCTION,
+        persist_directory=db_path,
+        embedding_function=embedding_model_function,
     )
 
     # Calculate Page IDs.
