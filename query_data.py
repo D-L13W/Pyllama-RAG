@@ -13,6 +13,7 @@ Answer the question based only on the following context:
 
 Answer the following question based only on the above context: {question}
 """
+NUM_SOURCES_DEFAULT = 6
 
 
 def main():
@@ -38,7 +39,7 @@ def main():
         "--num-sources",
         dest="num_sources",
         type=int,
-        default=6,
+        default=NUM_SOURCES_DEFAULT,
         help="Specifies how many chunks/sources to take into account when answering a query.",
     )
     parser.add_argument(
@@ -46,16 +47,14 @@ def main():
         "--embedding-model",
         dest="embedding_model",
         type=str,
-        default="bge-m3",
-        help="Specifies embedding model to use (via Ollama).",
+        help="Specifies embedding model to use.",
     )
     parser.add_argument(
         "--lm",
         "--language-model",
         dest="language_model",
         type=str,
-        default="phi3:14b-medium-4k-instruct-q4_0",
-        help="Specifies language model to use (via Ollama).",
+        help="Specifies language model to use.",
     )
     args = parser.parse_args()
 
@@ -64,13 +63,20 @@ def main():
     for key in args_dict:
         print(f"{key} -> {args_dict[key]}")
 
-    # Get model functions based on provided strings
-    embedding_model_function = model_functions.get_embed_model_func(
-        embedding_model=args.embedding_model
-    )
-    language_model_function = model_functions.get_lang_model_func(
-        language_model=args.language_model
-    )
+    # Get model functions based on CLI arguments (use defaults in model_functions if unspecified)
+    if hasattr(args, "embedding_model"):
+        embedding_model_function = model_functions.ollama_get_embed_model_func(
+            embedding_model=args.embedding_model
+        )
+    else:
+        embedding_model_function = model_functions.ollama_get_embed_model_func()
+
+    if hasattr(args, "language_model"):
+        language_model_function = model_functions.ollama_get_lang_model_func(
+            language_model=args.language_model
+        )
+    else:
+        language_model_function = model_functions.ollama_get_lang_model_func()
 
     # Query the database using CLI arguments
     query_db(

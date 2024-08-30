@@ -48,8 +48,7 @@ def main():
         "--embedding-model",
         dest="embedding_model",
         type=str,
-        default="bge-m3",
-        help="Specifies embedding model to use (via Ollama).",
+        help="Specifies embedding model to use.",
     )
     args = parser.parse_args()
 
@@ -62,10 +61,13 @@ def main():
     for key in args_dict:
         print(f"{key} -> {args_dict[key]}")
 
-    # Instantiate embedding model
-    embedding_model_function = model_functions.get_embed_model_func(
-        embedding_model=args.embedding_model
-    )
+    # Get model functions based on CLI arguments (use defaults in model_functions if unspecified)
+    if hasattr(args, "embedding_model"):
+        embedding_model_function = model_functions.ollama_get_embed_model_func(
+            embedding_model=args.embedding_model
+        )
+    else:
+        embedding_model_function = model_functions.ollama_get_embed_model_func()
 
     # Reset database if --reset flag specified
     if args.reset:
