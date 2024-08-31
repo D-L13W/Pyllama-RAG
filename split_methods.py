@@ -5,24 +5,27 @@ from langchain_chroma import Chroma
 from unstructured.partition.auto import partition
 
 
-def recursive_split_documents(documents: list[Document]):
-    CHUNK_SIZE: int = 20000  # in terms of character count
-    CHUNK_OVERLAP: int = 1000
+def recursive_split_documents(
+    documents: list[Document], chunk_size: int, chunk_overlap: int
+):
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=CHUNK_SIZE,
-        chunk_overlap=CHUNK_OVERLAP,
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
         length_function=len,
         is_separator_regex=False,
     )
     return text_splitter.split_documents(documents)
 
 
-def semantic_split_documents(documents: list[Document], embedding_model_function):
-    BREAKPOINT_THRESHOLD_AMOUNT: int = 10
+def semantic_split_documents(
+    documents: list[Document],
+    embedding_model_function,
+    breakpoint_threshold_amount: int,
+):
     text_splitter = SemanticChunker(
         embeddings=embedding_model_function,
-        breakpoint_threshold_amount=BREAKPOINT_THRESHOLD_AMOUNT,
-    )
+        breakpoint_threshold_amount=breakpoint_threshold_amount,
+    )  # uses default 'percentile' threshold type
     return text_splitter.split_documents(documents)
 
 

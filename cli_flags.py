@@ -2,6 +2,8 @@ import settings
 
 # CLI interface flags. `dest` attribute names are specified for clarity though they are normally inferred from the flags themselves; these indicate the attribute names of instantiated parser objects.
 
+# IMPORTANT: If editing `dest` attributes here, please change all the corresponding namespace attribute references throughout the codebase as well.
+
 split_method_args: list[str] = ["--sm", "--split-method"]
 split_method_kwargs: dict = {
     "dest": "split_method",
@@ -40,6 +42,33 @@ query_text_kwargs: dict = {
     "dest": "query_text",
     "type": str,
     "help": "Specifies query text.",
+}
+
+recursive_chunk_size_args: list[str] = ["--rcs", "--recursive-chunk-size"]
+recursive_chunk_size_kwargs: dict = {
+    "dest": "recursive_chunk_size",
+    "type": int,
+    "default": settings.DEFAULT_RECURSIVE_CHUNK_SIZE,
+    "help": "Specifies chunk size for 'recursive' split method.",
+}
+
+recursive_chunk_overlap_args: list[str] = ["--rco", "--recursive-chunk-overlap"]
+recursive_chunk_overlap_kwargs: dict = {
+    "dest": "recursive_chunk_overlap",
+    "type": int,
+    "default": settings.DEFAULT_RECURSIVE_CHUNK_OVERLAP,
+    "help": "Specifies chunk overlap for 'recursive' split method.",
+}
+
+semantic_breakpoint_threshold_amount_args: list[str] = [
+    "--sbta",
+    "--semantic-breakpoint-threshold-amount",
+]
+semantic_breakpoint_threshold_amount_kwargs: dict = {
+    "dest": "semantic_breakpoint_threshold_amount",
+    "type": int,
+    "default": settings.DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT,
+    "help": "Specifies breakpoint threshold amount for 'semantic' split method.",
 }
 
 num_sources_args: list[str] = ["-n", "--num-sources"]

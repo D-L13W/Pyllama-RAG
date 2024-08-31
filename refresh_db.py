@@ -6,6 +6,7 @@ from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 import settings
 import cli_flags
+import model_providers
 
 
 def main():
@@ -22,6 +23,17 @@ def main():
         **cli_flags.embedding_model_kwargs,
     )
     parser.add_argument(*cli_flags.split_method_args, **cli_flags.split_method_kwargs)
+    parser.add_argument(
+        *cli_flags.recursive_chunk_size_args, **cli_flags.recursive_chunk_size_kwargs
+    )
+    parser.add_argument(
+        *cli_flags.recursive_chunk_overlap_args,
+        **cli_flags.recursive_chunk_overlap_kwargs,
+    )
+    parser.add_argument(
+        *cli_flags.semantic_breakpoint_threshold_amount_args,
+        **cli_flags.semantic_breakpoint_threshold_amount_kwargs,
+    )
     parser.add_argument(*cli_flags.reset_db_args, **cli_flags.reset_db_kwargs)
     args = parser.parse_args()
 
@@ -45,12 +57,16 @@ def check_reset_db(args: argparse.Namespace):
 
 
 def check_split_method(args: argparse.Namespace):
-    embedding_model_function = settings.get_embed_model_func(
+    embedding_model_function = model_providers.get_embed_model_func(
         provider=args.embedding_model_provider, embedding_model=args.embedding_model
     )
     if args.split_method == "recursive":
         pdf_documents = pdf_load(data_path=args.data_path)
-        chunks = split_methods.recursive_split_documents(documents=pdf_documents)
+        chunks = split_methods.recursive_split_documents(
+            documents=pdf_documents,
+            chunk_size=args.recursive_chunk_size,
+            chunk_overlap=args.recursive_chunk_overlap,
+        )
         split_methods.sync_to_db(
             chunks=chunks,
             db_path=args.db_path,
@@ -59,7 +75,9 @@ def check_split_method(args: argparse.Namespace):
     elif args.split_method == "semantic":
         pdf_documents = pdf_load(data_path=args.data_path)
         chunks = split_methods.semantic_split_documents(
-            documents=pdf_documents, embedding_model_function=embedding_model_function
+            documents=pdf_documents,
+            embedding_model_function=embedding_model_function,
+            breakpoint_threshold_amount=args.semantic_breakpoint_threshold_amount,
         )
         split_methods.sync_to_db(
             chunks=chunks,

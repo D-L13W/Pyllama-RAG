@@ -4,6 +4,7 @@ from langchain.prompts import ChatPromptTemplate
 import polars as pl
 import settings
 import cli_flags
+import model_providers
 
 
 def main():
@@ -41,10 +42,10 @@ def query_db(args: argparse.Namespace, prompt_template_str: str):
     query_text: str = args.query_text
     db_path: str = args.db_path
     num_sources: int = args.num_sources
-    embedding_model_function = settings.get_embed_model_func(
+    embedding_model_function = model_providers.get_embed_model_func(
         provider=args.embedding_model_provider, embedding_model=args.embedding_model
     )
-    language_model_function = settings.get_lang_model_func(
+    language_model_function = model_providers.get_lang_model_func(
         provider=args.language_model_provider, language_model=args.language_model
     )
     # Prepare the DB.

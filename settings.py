@@ -1,11 +1,12 @@
-from langchain_community.embeddings.ollama import OllamaEmbeddings
-from langchain_community.llms.ollama import Ollama
 import argparse
 
 # Storage variables
 DEFAULT_DATA_PATH: str = "data"
 DEFAULT_DB_PATH: str = "db"
 DEFAULT_SPLIT_METHOD: str = "semantic"
+DEFAULT_RECURSIVE_CHUNK_SIZE: int = 400
+DEFAULT_RECURSIVE_CHUNK_OVERLAP: int = 40
+DEFAULT_SEMANTIC_BREAKPOINT_THRESHOLD_AMOUNT: int = 10
 
 # Embedding and language model variables
 PROMPT_TEMPLATE: str = """
@@ -29,16 +30,3 @@ def print_settings(args: argparse.Namespace):
     formatting_space = len(max(args_dict.keys(), key=len))
     for key in args_dict:
         print(f"{key:>{formatting_space}} -> {args_dict[key]}")
-
-
-# Can use other providers other than Ollama too
-def get_embed_model_func(provider: str, embedding_model: str):
-    if provider == "ollama":
-        embedding_model_function = OllamaEmbeddings(model=embedding_model)
-    return embedding_model_function
-
-
-def get_lang_model_func(provider: str, language_model: str):
-    if provider == "ollama":
-        language_model_function = Ollama(model=language_model)
-    return language_model_function
