@@ -1,55 +1,28 @@
 import argparse
 import os
 import shutil
-import chunk_handling
+import split_methods
 from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
-import model_functions
+import settings
+import cli_flags
 
 
 def main():
-
-    # Command line arguments
+    # CLI setup
     parser = argparse.ArgumentParser()
+    parser.add_argument(*cli_flags.data_path_args, **cli_flags.data_path_kwargs)
+    parser.add_argument(*cli_flags.db_path_args, **cli_flags.db_path_kwargs)
     parser.add_argument(
-        "--reset",  # keys are inferred from the CLI flags; dest attributes are also specified for clarity (they are normally inferred from the flag name)
-        dest="reset",
-        action="store_true",
-        default=False,
-        help="Resets the database.",
-    )  # default is false, but specified just for clarity
-    parser.add_argument(
-        "-s",
-        "--split",
-        dest="split",
-        type=str,
-        default="semantic",
-        choices=["recursive", "semantic", "unstructured"],
-        help="Specifies splitting method. Use langchain's recursive text splitting ('recursive') or the experimental semantic text splitting ('semantic'), or opt for splitting via the unstructured library ('unstructured'). The langchain methods are implemented only for pdfs.",
+        *cli_flags.embedding_model_provider_args,
+        **cli_flags.embedding_model_provider_kwargs,
     )
     parser.add_argument(
-        "--data",
-        "--data-path",
-        dest="data_path",
-        type=str,
-        default="data",
-        help="Specifies data path to read.",
+        *cli_flags.embedding_model_args,
+        **cli_flags.embedding_model_kwargs,
     )
-    parser.add_argument(
-        "--db",
-        "--db-path",
-        dest="db_path",
-        type=str,
-        default="db",
-        help="Specifies database path to sync chunks to.",
-    )
-    parser.add_argument(
-        "--ebm",
-        "--embedding-model",
-        dest="embedding_model",
-        type=str,
-        help="Specifies embedding model to use.",
-    )
+    parser.add_argument(*cli_flags.split_method_args, **cli_flags.split_method_kwargs)
+    parser.add_argument(*cli_flags.reset_db_args, **cli_flags.reset_db_kwargs)
     args = parser.parse_args()
 
     # Check that data path exists
@@ -58,42 +31,40 @@ def main():
 
     # Prints a confirmation of CLI arguments
     args_dict = vars(args)
+    formatting_space = len(max(args_dict.keys(), key=len))
     for key in args_dict:
-        print(f"{key} -> {args_dict[key]}")
+        print(f"{key:>{formatting_space}} -> {args_dict[key]}")
 
     # Get model functions based on CLI arguments (use defaults in model_functions if unspecified)
-    if hasattr(args, "embedding_model"):
-        embedding_model_function = model_functions.ollama_get_embed_model_func(
-            embedding_model=args.embedding_model
-        )
-    else:
-        embedding_model_function = model_functions.ollama_get_embed_model_func()
+    embedding_model_function = settings.get_embed_model_func(
+        provider=args.embedding_model_provider, embedding_model=args.embedding_model
+    )
 
     # Reset database if --reset flag specified
-    if args.reset:
+    if args.reset_db:
         print(f"\n🧹 Clearing Database -> {args.db_path}\n")
         clear_database(db_path=args.db_path)
 
     # Database creation/sync method
-    if args.split == "recursive":
+    if args.split_method == "recursive":
         pdf_documents = pdf_load(data_path=args.data_path)
-        chunks = chunk_handling.recursive_split_documents(documents=pdf_documents)
-        chunk_handling.sync_to_db(
+        chunks = split_methods.recursive_split_documents(documents=pdf_documents)
+        split_methods.sync_to_db(
             chunks=chunks,
             db_path=args.db_path,
             embedding_model_function=embedding_model_function,
         )
-    elif args.split == "semantic":
+    elif args.split_method == "semantic":
         pdf_documents = pdf_load(data_path=args.data_path)
-        chunks = chunk_handling.semantic_split_documents(
+        chunks = split_methods.semantic_split_documents(
             documents=pdf_documents, embedding_model_function=embedding_model_function
         )
-        chunk_handling.sync_to_db(
+        split_methods.sync_to_db(
             chunks=chunks,
             db_path=args.db_path,
             embedding_model_function=embedding_model_function,
         )
-    elif args.split == "unstructured":
+    elif args.split_method == "unstructured":
         documents = all_file_load(data_path=args.data_path)
 
 

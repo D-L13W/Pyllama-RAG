@@ -2,81 +2,47 @@ import argparse
 from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 import polars as pl
-import model_functions
-
-PROMPT_TEMPLATE: str = """
-Answer the question based only on the following context:
-
-{context}
-
----
-
-Answer the following question based only on the above context: {question}
-"""
-NUM_SOURCES_DEFAULT = 6
+import settings
+import cli_flags
 
 
 def main():
-    # Create CLI.
+    # CLI setup
     parser = argparse.ArgumentParser()
+    parser.add_argument(*cli_flags.db_path_args, **cli_flags.db_path_kwargs)
     parser.add_argument(
-        "-q",
-        "--query",  # keys are inferred from the CLI flags
-        dest="query_text",
-        type=str,
-        help="Specifies query text.",
+        *cli_flags.embedding_model_provider_args,
+        **cli_flags.embedding_model_provider_kwargs,
     )
     parser.add_argument(
-        "--db",
-        "--db-path",
-        dest="db_path",
-        type=str,
-        default="db",
-        help="Specifies database path to read.",
+        *cli_flags.embedding_model_args,
+        **cli_flags.embedding_model_kwargs,
     )
     parser.add_argument(
-        "-n",
-        "--num-sources",
-        dest="num_sources",
-        type=int,
-        default=NUM_SOURCES_DEFAULT,
-        help="Specifies how many chunks/sources to take into account when answering a query.",
+        *cli_flags.language_model_provider_args,
+        **cli_flags.language_model_provider_kwargs,
     )
     parser.add_argument(
-        "--ebm",
-        "--embedding-model",
-        dest="embedding_model",
-        type=str,
-        help="Specifies embedding model to use.",
+        *cli_flags.language_model_args,
+        **cli_flags.language_model_kwargs,
     )
-    parser.add_argument(
-        "--lm",
-        "--language-model",
-        dest="language_model",
-        type=str,
-        help="Specifies language model to use.",
-    )
+    parser.add_argument(*cli_flags.num_sources_args, **cli_flags.num_sources_kwargs)
+    parser.add_argument(*cli_flags.query_text_args, **cli_flags.query_text_kwargs)
     args = parser.parse_args()
 
     # Prints a confirmation of CLI arguments
     args_dict = vars(args)
+    formatting_space = len(max(args_dict.keys(), key=len))
     for key in args_dict:
-        print(f"{key} -> {args_dict[key]}")
+        print(f"{key:>{formatting_space}} -> {args_dict[key]}")
 
-    # Get model functions based on CLI arguments (use defaults in model_functions if unspecified)
-    if hasattr(args, "embedding_model"):
-        embedding_model_function = model_functions.ollama_get_embed_model_func(
-            embedding_model=args.embedding_model
-        )
-    else:
-        embedding_model_function = model_functions.ollama_get_embed_model_func()
-
-    if hasattr(args, "language_model"):
-        language_model_function = model_functions.ollama_get_lang_model_func(
-            language_model=args.language_model
-        )
-    else:
-        language_model_function = model_functions.ollama_get_lang_model_func()
+    # Get model functions based on CLI arguments (use defaults in model_functions if unspecified); can use more if else statements
+    embedding_model_function = settings.get_embed_model_func(
+        provider=args.embedding_model_provider, embedding_model=args.embedding_model
+    )
+    language_model_function = settings.get_lang_model_func(
+        provider=args.language_model_provider, language_model=args.language_model
+    )
 
     # Query the database using CLI arguments
     query_db(
@@ -116,7 +82,7 @@ def query_db(
         }
     )  # Results list is small enough that this is fine
     context_text = "\n\n---\n\n".join(sources["content"])
-    prompt_template = ChatPromptTemplate.from_template(PROMPT_TEMPLATE)
+    prompt_template = ChatPromptTemplate.from_template(settings.PROMPT_TEMPLATE)
     prompt = prompt_template.format(context=context_text, question=query_text)
     response_text = language_model_function.invoke(prompt)
 
