@@ -79,7 +79,7 @@ num_sources_kwargs: dict = {
     "help": "Specifies how many chunks/sources to take into account when answering a query.",
 }
 
-embedding_model_provider_args: list[str] = ["--ebmp", "--embedding-model-provider"]
+embedding_model_provider_args: list[str] = ["--emp", "--embedding-model-provider"]
 embedding_model_provider_kwargs: dict = {
     "dest": "embedding_model_provider",
     "type": str,
@@ -88,12 +88,12 @@ embedding_model_provider_kwargs: dict = {
     "help": f"Specifies embedding model provider to use. Default is '{settings.DEFAULT_EMBEDDING_MODEL_PROVIDER}'",
 }
 
-embedding_model_args: list[str] = ["--ebm", "--embedding-model"]
+embedding_model_args: list[str] = ["--em", "--embedding-model"]
 embedding_model_kwargs: dict = {
     "dest": "embedding_model",
     "type": str,
     "default": settings.DEFAULT_EMBEDDING_MODEL,
-    "help": f"Specifies embedding model to use in string format. May be a model name, a path to a local model file, etc. depending on the model provider. Default is '{settings.DEFAULT_EMBEDDING_MODEL}'.",
+    "help": f"Specifies embedding model to use in string format. May be a model name, a path to a local model file, etc. depending on the model provider and local implementation. Default is '{settings.DEFAULT_EMBEDDING_MODEL}'.",
 }
 
 language_model_provider_args: list[str] = ["--lmp", "--language-model-provider"]
@@ -110,5 +110,5 @@ language_model_kwargs: dict = {
     "dest": "language_model",
     "type": str,
     "default": settings.DEFAULT_LANGUAGE_MODEL,
-    "help": f"Specifies language model to use in string format. May be a model name, a path to a local model file, etc. depending on the model provider. Default is '{settings.DEFAULT_LANGUAGE_MODEL}'.",
+    "help": f"Specifies language model to use in string format. May be a model name, a path to a local model file, etc. depending on the model provider and local implementation. Default is '{settings.DEFAULT_LANGUAGE_MODEL}'.",
 }
