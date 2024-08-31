@@ -4,7 +4,7 @@ A simple CLI interface written to help my dad produce test questions more effect
 
 # Installation and configuration
 
-1. Install [Ollama](https://ollama.com/) and ensure that the binary is added to `$PATH`. The default embedding model is `bge-m3` and the default language model is `phi3:14b-medium-4k-instruct-q4_0`. These may be changed in `model_functions.py`.
+1. Install [Ollama](https://ollama.com/) and ensure that the binary is added to `$PATH`. The default embedding model is `bge-m3` and the default language model is `phi3:14b-medium-4k-instruct-q4_0`. These may be changed in `settings.py`.
 
 2. Configure a virtual environment for the project using `venv` or `conda`. Use python version >= 3.12, as newline characters are used in f-strings.
 
@@ -18,4 +18,4 @@ conda create --prefix ./.conda python=3.12
 pip install -r requirements.txt
 ```
 
-4. Further query customisation may be performed under `query_data.py`. For example, the default prompt template and number of sources for query may be customised there.
+4. Further query customisation may be performed under `settings.py`. For example, the default prompt template and number of sources for query may be customised there. Conditionals are used so that different splitting methods, model providers and models may be specified using the CLI.

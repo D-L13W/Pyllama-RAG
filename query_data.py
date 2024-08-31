@@ -30,37 +30,23 @@ def main():
     parser.add_argument(*cli_flags.query_text_args, **cli_flags.query_text_kwargs)
     args = parser.parse_args()
 
-    # Prints a confirmation of CLI arguments
-    args_dict = vars(args)
-    formatting_space = len(max(args_dict.keys(), key=len))
-    for key in args_dict:
-        print(f"{key:>{formatting_space}} -> {args_dict[key]}")
+    # Logic after getting CLI arguments
+    settings.print_settings(args=args)
+    query_db(
+        args=args, prompt_template_str=settings.PROMPT_TEMPLATE
+    )  # all args except for prompt template are configurable using CLI flags as it doesn't make sense to change a long prompt template via a CLI argument
 
-    # Get model functions based on CLI arguments (use defaults in model_functions if unspecified); can use more if else statements
+
+def query_db(args: argparse.Namespace, prompt_template_str: str):
+    query_text: str = args.query_text
+    db_path: str = args.db_path
+    num_sources: int = args.num_sources
     embedding_model_function = settings.get_embed_model_func(
         provider=args.embedding_model_provider, embedding_model=args.embedding_model
     )
     language_model_function = settings.get_lang_model_func(
         provider=args.language_model_provider, language_model=args.language_model
     )
-
-    # Query the database using CLI arguments
-    query_db(
-        query_text=args.query_text,
-        db_path=args.db_path,
-        num_sources=args.num_sources,
-        embedding_model_function=embedding_model_function,
-        language_model_function=language_model_function,
-    )
-
-
-def query_db(
-    query_text: str,
-    db_path: str,
-    num_sources: int,
-    embedding_model_function,
-    language_model_function,
-):
     # Prepare the DB.
     db = Chroma(
         persist_directory=db_path,
@@ -82,7 +68,7 @@ def query_db(
         }
     )  # Results list is small enough that this is fine
     context_text = "\n\n---\n\n".join(sources["content"])
-    prompt_template = ChatPromptTemplate.from_template(settings.PROMPT_TEMPLATE)
+    prompt_template = ChatPromptTemplate.from_template(prompt_template_str)
     prompt = prompt_template.format(context=context_text, question=query_text)
     response_text = language_model_function.invoke(prompt)
 

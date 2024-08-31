@@ -1,5 +1,6 @@
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 from langchain_community.llms.ollama import Ollama
+import argparse
 
 # Storage variables
 DEFAULT_DATA_PATH: str = "data"
@@ -21,6 +22,13 @@ DEFAULT_EMBEDDING_MODEL_PROVIDER = "ollama"
 DEFAULT_EMBEDDING_MODEL = "bge-m3"
 DEFAULT_LANGUAGE_MODEL_PROVIDER = "ollama"
 DEFAULT_LANGUAGE_MODEL = "phi3:14b-medium-4k-instruct-q4_0"
+
+
+def print_settings(args: argparse.Namespace):
+    args_dict = vars(args)
+    formatting_space = len(max(args_dict.keys(), key=len))
+    for key in args_dict:
+        print(f"{key:>{formatting_space}} -> {args_dict[key]}")
 
 
 # Can use other providers other than Ollama too

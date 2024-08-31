@@ -29,23 +29,25 @@ def main():
     if not os.path.exists(args.data_path):
         raise Exception("Data path does not exist. Use a valid data path.")
 
-    # Prints a confirmation of CLI arguments
-    args_dict = vars(args)
-    formatting_space = len(max(args_dict.keys(), key=len))
-    for key in args_dict:
-        print(f"{key:>{formatting_space}} -> {args_dict[key]}")
+    # Logic after getting CLI arguments
+    settings.print_settings(args=args)
+    check_reset_db(args=args)
+    check_split_method(args=args)
 
-    # Get model functions based on CLI arguments (use defaults in model_functions if unspecified)
+
+def check_reset_db(args: argparse.Namespace):
+    if args.reset_db:
+        print(f"\n🧹 Clearing Database -> {args.db_path}\n")
+        if os.path.exists(args.db_path):
+            shutil.rmtree(args.db_path)
+        else:
+            print("Database does not exist.")
+
+
+def check_split_method(args: argparse.Namespace):
     embedding_model_function = settings.get_embed_model_func(
         provider=args.embedding_model_provider, embedding_model=args.embedding_model
     )
-
-    # Reset database if --reset flag specified
-    if args.reset_db:
-        print(f"\n🧹 Clearing Database -> {args.db_path}\n")
-        clear_database(db_path=args.db_path)
-
-    # Database creation/sync method
     if args.split_method == "recursive":
         pdf_documents = pdf_load(data_path=args.data_path)
         chunks = split_methods.recursive_split_documents(documents=pdf_documents)
@@ -66,11 +68,6 @@ def main():
         )
     elif args.split_method == "unstructured":
         documents = all_file_load(data_path=args.data_path)
-
-
-def clear_database(db_path: str):
-    if os.path.exists(db_path):
-        shutil.rmtree(db_path)
 
 
 def pdf_load(data_path: str):
