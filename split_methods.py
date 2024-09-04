@@ -1,10 +1,64 @@
+import argparse
+import os
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_experimental.text_splitter import SemanticChunker
 from langchain.schema.document import Document
 from langchain_chroma import Chroma
+from langchain_community.document_loaders import PyPDFDirectoryLoader
 from unstructured.partition.auto import partition
+import model_providers
+
+SPLIT_METHOD_CHOICES: list[str] = ["recursive", "semantic", "unstructured"]
 
 
+# Main function; runs appropriate splitting methods based on args
+def exec_split_method(args: argparse.Namespace):
+    embedding_model_function = model_providers.get_embed_model_func(
+        provider=args.embedding_model_provider, embedding_model=args.embedding_model
+    )
+    if args.split_method == "recursive":
+        pdf_documents = pdf_load(data_path=args.data_path)
+        chunks = recursive_split_documents(
+            documents=pdf_documents,
+            chunk_size=args.recursive_chunk_size,
+            chunk_overlap=args.recursive_chunk_overlap,
+        )
+        sync_to_db(
+            chunks=chunks,
+            db_path=args.db_path,
+            embedding_model_function=embedding_model_function,
+        )
+    elif args.split_method == "semantic":
+        pdf_documents = pdf_load(data_path=args.data_path)
+        chunks = semantic_split_documents(
+            documents=pdf_documents,
+            embedding_model_function=embedding_model_function,
+            breakpoint_threshold_amount=args.semantic_breakpoint_threshold_amount,
+        )
+        sync_to_db(
+            chunks=chunks,
+            db_path=args.db_path,
+            embedding_model_function=embedding_model_function,
+        )
+    elif args.split_method == "unstructured":
+        documents = all_file_load(data_path=args.data_path)
+
+
+# File handling
+def pdf_load(data_path: str):
+    return PyPDFDirectoryLoader(data_path).load()
+
+
+def all_file_load(data_path: str):
+    filepaths = [
+        os.path.join(dirpath, f)
+        for (dirpath, dirnames, filenames) in os.walk(data_path)
+        for f in filenames
+    ]
+    return filepaths
+
+
+# Actual splitting methods
 def recursive_split_documents(
     documents: list[Document], chunk_size: int, chunk_overlap: int
 ):

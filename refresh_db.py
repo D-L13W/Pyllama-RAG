@@ -2,7 +2,6 @@ import argparse
 import os
 import shutil
 import split_methods
-from langchain_community.document_loaders import PyPDFDirectoryLoader
 from langchain_community.embeddings.ollama import OllamaEmbeddings
 import settings
 import cli_flags
@@ -44,7 +43,7 @@ def main():
     # Logic after getting CLI arguments
     settings.print_settings(args=args)
     check_reset_db(args=args)
-    check_split_method(args=args)
+    split_methods.exec_split_method(args=args)
 
 
 def check_reset_db(args: argparse.Namespace):
@@ -53,52 +52,7 @@ def check_reset_db(args: argparse.Namespace):
         if os.path.exists(args.db_path):
             shutil.rmtree(args.db_path)
         else:
-            print("Database does not exist.")
-
-
-def check_split_method(args: argparse.Namespace):
-    embedding_model_function = model_providers.get_embed_model_func(
-        provider=args.embedding_model_provider, embedding_model=args.embedding_model
-    )
-    if args.split_method == "recursive":
-        pdf_documents = pdf_load(data_path=args.data_path)
-        chunks = split_methods.recursive_split_documents(
-            documents=pdf_documents,
-            chunk_size=args.recursive_chunk_size,
-            chunk_overlap=args.recursive_chunk_overlap,
-        )
-        split_methods.sync_to_db(
-            chunks=chunks,
-            db_path=args.db_path,
-            embedding_model_function=embedding_model_function,
-        )
-    elif args.split_method == "semantic":
-        pdf_documents = pdf_load(data_path=args.data_path)
-        chunks = split_methods.semantic_split_documents(
-            documents=pdf_documents,
-            embedding_model_function=embedding_model_function,
-            breakpoint_threshold_amount=args.semantic_breakpoint_threshold_amount,
-        )
-        split_methods.sync_to_db(
-            chunks=chunks,
-            db_path=args.db_path,
-            embedding_model_function=embedding_model_function,
-        )
-    elif args.split_method == "unstructured":
-        documents = all_file_load(data_path=args.data_path)
-
-
-def pdf_load(data_path: str):
-    return PyPDFDirectoryLoader(data_path).load()
-
-
-def all_file_load(data_path: str):
-    filepaths = [
-        os.path.join(dirpath, f)
-        for (dirpath, dirnames, filenames) in os.walk(data_path)
-        for f in filenames
-    ]
-    return filepaths
+            print("Database does not exist. Use a valid data path.")
 
 
 if __name__ == "__main__":

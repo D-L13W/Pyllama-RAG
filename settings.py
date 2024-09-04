@@ -19,12 +19,13 @@ Answer the question based only on the following context:
 Answer the following question based only on the above context: {question}
 """
 DEFAULT_NUM_SOURCES: int = 8
-DEFAULT_EMBEDDING_MODEL_PROVIDER = "ollama"
-DEFAULT_EMBEDDING_MODEL = "bge-m3"
-DEFAULT_LANGUAGE_MODEL_PROVIDER = "ollama"
-DEFAULT_LANGUAGE_MODEL = "phi3:14b-medium-4k-instruct-q4_0"
+DEFAULT_EMBEDDING_MODEL_PROVIDER: str = "ollama"
+DEFAULT_EMBEDDING_MODEL: str = "bge-m3"
+DEFAULT_LANGUAGE_MODEL_PROVIDER: str = "ollama"
+DEFAULT_LANGUAGE_MODEL: str = "phi3:14b-medium-4k-instruct-q4_0"
 
 
+# Printing settings based on CLI args
 def print_settings(args: argparse.Namespace):
     args_dict = vars(args)
     formatting_space = len(max(args_dict.keys(), key=len))

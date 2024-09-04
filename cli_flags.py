@@ -1,4 +1,6 @@
 import settings
+import split_methods
+import model_providers
 
 # CLI interface flags. `dest` attribute names are specified for clarity though they are normally inferred from the flags themselves; these indicate the attribute names of instantiated parser objects.
 
@@ -9,7 +11,7 @@ split_method_kwargs: dict = {
     "dest": "split_method",
     "type": str,
     "default": settings.DEFAULT_SPLIT_METHOD,
-    "choices": ["recursive", "semantic", "unstructured"],
+    "choices": split_methods.SPLIT_METHOD_CHOICES,
     "help": "Specifies splitting method. Use langchain's recursive text splitting ('recursive') or the experimental semantic text splitting ('semantic'), or opt for splitting via the unstructured library ('unstructured'). The langchain methods are implemented only for pdfs.",
 }
 
@@ -84,8 +86,8 @@ embedding_model_provider_kwargs: dict = {
     "dest": "embedding_model_provider",
     "type": str,
     "default": settings.DEFAULT_EMBEDDING_MODEL_PROVIDER,
-    "choices": ["ollama", "anthropic", "openai"],
-    "help": f"Specifies embedding model provider to use. Default is '{settings.DEFAULT_EMBEDDING_MODEL_PROVIDER}'",
+    "choices": model_providers.EMBEDDING_MODEL_PROVIDER_CHOICES,
+    "help": f"Specifies embedding model provider to use. Default is '{settings.DEFAULT_EMBEDDING_MODEL_PROVIDER}'. It is recommended to use the same model and model provider for refreshing the database as well as querying data.",
 }
 
 embedding_model_args: list[str] = ["--em", "--embedding-model"]
@@ -93,7 +95,7 @@ embedding_model_kwargs: dict = {
     "dest": "embedding_model",
     "type": str,
     "default": settings.DEFAULT_EMBEDDING_MODEL,
-    "help": f"Specifies embedding model to use in string format. May be a model name, a path to a local model file, etc. depending on the model provider and local implementation. Default is '{settings.DEFAULT_EMBEDDING_MODEL}'.",
+    "help": f"Specifies embedding model to use in string format. May be a model name, a path to a local model file, etc. depending on the model provider and local implementation. Default is '{settings.DEFAULT_EMBEDDING_MODEL}'. It is recommended to use the same model and model provider for refreshing the database as well as querying data.",
 }
 
 language_model_provider_args: list[str] = ["--lmp", "--language-model-provider"]
@@ -101,7 +103,7 @@ language_model_provider_kwargs: dict = {
     "dest": "language_model_provider",
     "type": str,
     "default": settings.DEFAULT_LANGUAGE_MODEL_PROVIDER,
-    "choices": ["ollama", "anthropic", "openai"],
+    "choices": model_providers.LANGUAGE_MODEL_PROVIDER_CHOICES,
     "help": f"Specifies language model provider to use. Default is '{settings.DEFAULT_LANGUAGE_MODEL_PROVIDER}'",
 }
 
