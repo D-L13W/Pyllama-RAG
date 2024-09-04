@@ -3,9 +3,8 @@ import os
 import shutil
 import split_methods
 from langchain_community.embeddings.ollama import OllamaEmbeddings
-import settings
+import defaults
 import cli_flags
-import model_providers
 
 
 def main():
@@ -41,7 +40,7 @@ def main():
         raise Exception("Data path does not exist. Use a valid data path.")
 
     # Logic after getting CLI arguments
-    settings.print_settings(args=args)
+    defaults.print_settings(args=args)
     check_reset_db(args=args)
     split_methods.exec_split_method(args=args)
 

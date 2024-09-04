@@ -2,7 +2,7 @@ import argparse
 from langchain_chroma import Chroma
 from langchain.prompts import ChatPromptTemplate
 import polars as pl
-import settings
+import defaults
 import cli_flags
 import model_providers
 
@@ -32,9 +32,9 @@ def main():
     args = parser.parse_args()
 
     # Logic after getting CLI arguments
-    settings.print_settings(args=args)
+    defaults.print_settings(args=args)
     query_db(
-        args=args, prompt_template_str=settings.PROMPT_TEMPLATE
+        args=args, prompt_template_str=defaults.PROMPT_TEMPLATE
     )  # all args except for prompt template are configurable using CLI flags as it doesn't make sense to change a long prompt template via a CLI argument
 
 
