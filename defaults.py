@@ -2,7 +2,7 @@ import argparse
 
 # Storage variables
 DEFAULT_DATA_PATH: str = "data"
-DEFAULT_DB_PATH: str = "db"
+DEFAULT_DB_PATH: str = "chroma"
 DEFAULT_SPLIT_METHOD: str = "semantic"
 DEFAULT_RECURSIVE_CHUNK_SIZE: int = 400
 DEFAULT_RECURSIVE_CHUNK_OVERLAP: int = 40

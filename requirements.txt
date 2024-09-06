@@ -8,4 +8,3 @@ pytest
 boto3
 polars
 pydantic
-unstructured[all-docs]

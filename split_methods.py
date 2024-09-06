@@ -5,10 +5,9 @@ from langchain_experimental.text_splitter import SemanticChunker
 from langchain.schema.document import Document
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import PyPDFDirectoryLoader
-from unstructured.partition.auto import partition
 import model_providers
 
-SPLIT_METHOD_CHOICES: list[str] = ["recursive", "semantic", "unstructured"]
+SPLIT_METHOD_CHOICES: list[str] = ["recursive", "semantic"]
 
 
 # Main function; runs appropriate splitting methods based on args
@@ -40,8 +39,6 @@ def exec_split_method(args: argparse.Namespace):
             db_path=args.db_path,
             embedding_model_function=embedding_model_function,
         )
-    elif args.split_method == "unstructured":
-        documents = all_file_load(data_path=args.data_path)
 
 
 # File handling

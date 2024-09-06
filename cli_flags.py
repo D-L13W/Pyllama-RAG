@@ -12,7 +12,7 @@ split_method_kwargs: dict = {
     "type": str,
     "default": defaults.DEFAULT_SPLIT_METHOD,
     "choices": split_methods.SPLIT_METHOD_CHOICES,
-    "help": "Specifies splitting method. Use langchain's recursive text splitting ('recursive') or the experimental semantic text splitting ('semantic'), or opt for splitting via the unstructured library ('unstructured'). The langchain methods are implemented only for pdfs.",
+    "help": "Specifies splitting method. Use langchain's recursive text splitting ('recursive') or the experimental semantic text splitting ('semantic'). The methods are implemented only for pdfs.",
 }
 
 data_path_args: list[str] = ["--data", "--data-path"]

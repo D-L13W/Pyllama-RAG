@@ -2,7 +2,6 @@ import argparse
 import os
 import shutil
 import split_methods
-from langchain_community.embeddings.ollama import OllamaEmbeddings
 import defaults
 import cli_flags
 
@@ -51,7 +50,7 @@ def check_reset_db(args: argparse.Namespace):
         if os.path.exists(args.db_path):
             shutil.rmtree(args.db_path)
         else:
-            print("Database does not exist. Use a valid data path.")
+            print("Database does not exist.")
 
 
 if __name__ == "__main__":
