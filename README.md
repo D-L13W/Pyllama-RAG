@@ -4,7 +4,7 @@
 
 A simple CLI interface written to help my dad produce test questions more effectively from past year papers. Implements semantic splitting for improved retrieval accuracy (compared to recursive splitting), as well as a fully local querying system using Ollama. Works only with PDF files.
 
-> Note: This was produced as a means of self-familiarisation with Python. If you want an actual RAG system (local and cloud deployable) with a clean UI, [Quivr](https://github.com/QuivrHQ/quivr) is probably the way to go instead.
+> Note: This was produced as a means of self-familiarisation with Python. If you want an actual RAG system (local and cloud deployable) with a clean UI, [private-gpt](https://github.com/zylon-ai/private-gpt) and [Quivr](https://github.com/QuivrHQ/quivr) are definitely better alternatives.
 
 ## Installation and configuration
 
